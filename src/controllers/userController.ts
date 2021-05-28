@@ -12,6 +12,12 @@ const saltRounds = 10;
 
 const prisma = new PrismaClient();
 
+const userColumns = {
+  id: true,
+  username: true,
+  posts: true,
+};
+
 export const registerUser = async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -40,10 +46,17 @@ export const loginUser = async (req, res) => {
         username,
       },
     });
-    const isCorrectPassword = await bcrypt.compare(password, user.password);
+    if (!user)
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: "User does not exist." });
+    const isCorrectPassword: boolean = await bcrypt.compare(
+      password,
+      user.password
+    );
     if (isCorrectPassword) {
       const token = await generateToken({
-        id: user.id,
+        user_id: user.id,
         username: user.username,
       });
       res
@@ -74,7 +87,10 @@ export const updateUserPassword = async (req, res) => {
         .status(httpStatus.NOT_FOUND)
         .send({ message: "User not found" });
 
-    const isCorrectPassword = await bcrypt.compare(password, user.password);
+    const isCorrectPassword: boolean = await bcrypt.compare(
+      password,
+      user.password
+    );
     if (isCorrectPassword) {
       const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
       const updatedUser = await prisma.user.update({
@@ -110,11 +126,7 @@ export const getUsers = async (req, res) => {
       orderBy: {
         id: sortOrder,
       },
-      select: {
-        id: true,
-        username: true,
-        posts: true,
-      },
+      select: userColumns,
     });
     const result = {
       count: users.length,
@@ -128,16 +140,17 @@ export const getUsers = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
+  const { user_id } = req.authInfo;
+  if (id != user_id)
+    return res
+      .status(httpStatus.UNAUTHORIZED)
+      .send({ message: "You are not authorized to update this user." });
   const params = req.body;
   try {
     const user = await prisma.user.update({
       where: { id: parseInt(id) },
       data: params,
-      select: {
-        id: true,
-        username: true,
-        posts: true,
-      },
+      select: userColumns,
     });
     res.json(user);
   } catch (error) {
@@ -152,12 +165,12 @@ export const getOneUser = async (req, res) => {
       where: {
         id: parseInt(id),
       },
-      select: {
-        id: true,
-        username: true,
-        posts: true,
-      },
+      select: userColumns,
     });
+    if (!user)
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: "User not found." });
     res.json(user);
   } catch (error) {
     handleNotFound(error.message, res);
@@ -171,11 +184,7 @@ export const deleteuser = async (req, res) => {
       where: {
         id: parseInt(id),
       },
-      select: {
-        id: true,
-        username: true,
-        posts: true,
-      },
+      select: userColumns,
     });
     res.json(user);
   } catch (error) {

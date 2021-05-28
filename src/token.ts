@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import httpStatus from "http-status-codes";
 
-const generateToken = (payload: { username: string; id: number }) =>
+const generateToken = (payload: { username: string; user_id: number }) =>
   new Promise((resolve) => {
     const token = jwt.sign(payload, process.env.TOKEN_SECRET, {
       expiresIn: "30 days",
@@ -38,7 +38,7 @@ const validateLogin = (authorization: string) =>
 const authorizationMiddleware = async (req, res, next) => {
   try {
     console.log("token", req.headers.authorization);
-    req.AuthInfo = await validateLogin(req.headers.authorization);
+    req.authInfo = await validateLogin(req.headers.authorization);
   } catch (error) {
     return res.status(httpStatus.UNAUTHORIZED).send({ error: error.message });
   }

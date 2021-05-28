@@ -3,6 +3,14 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const authorColumns = {
+  author: {
+    select: {
+      username: true,
+    },
+  },
+};
+
 export const getPosts = async (req, res) => {
   const { limit = 10, page = 1, sortOrder = "asc", author, title } = req.query;
 
@@ -21,19 +29,13 @@ export const getPosts = async (req, res) => {
           contains: title,
         },
       },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-      },
+      include: authorColumns,
     });
 
     const collectedPosts = posts.map((post) => ({
       ...post,
       postLength: post.content.length,
+      author: post.author.username,
     }));
     const result = {
       count: collectedPosts.length,
@@ -49,18 +51,18 @@ export const getFeed = async (req, res) => {
   try {
     const posts = await prisma.post.findMany({
       where: { published: true },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-      },
+      include: authorColumns,
     });
+
+    const feedPosts = posts.map((post) => ({
+      ...post,
+      postLength: post.content.length,
+      author: post.author.username,
+    }));
+
     const result = {
-      count: posts.length,
-      data: posts,
+      count: feedPosts.length,
+      data: feedPosts,
     };
     res.json(result);
   } catch (error) {
@@ -81,14 +83,7 @@ export const createPost = async (req, res) => {
           },
         },
       },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-      },
+      include: authorColumns,
     });
     res.json(post);
   } catch (error) {
@@ -103,16 +98,13 @@ export const getOnePost = async (req, res) => {
       where: {
         id: parseInt(id),
       },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-      },
+      include: authorColumns,
     });
-    res.json(post);
+    const result = {
+      ...post,
+      author: post.author.username,
+    };
+    res.json(result);
   } catch (error) {
     handleNotFound(error.message, res);
   }
