@@ -1,0 +1,1480 @@
+openapi: 3.0.3
+
+################################################################################
+#                              API INFORMATION                                 #
+################################################################################
+info:
+  title: JMMB API
+  description: Welcome to JMMB API!
+    The JMMB API allows you to perform all the operations that you do with our frontend client application.
+    JMMB API is built using REST principles which ensures predictable URLs that makes writing applications easy. This API follows HTTP rules, enabling a wide range of HTTP clients which can be used to interact with the API.
+    Every resource is exposed as a URL. The URL of each resource can be obtained by accessing the API Root Endpoint.
+  version: 1.0.0
+  contact:
+    email: akeim.sutherland@smsja.net
+servers:
+  - url: http://localhost:4040/api
+    description: Local Development Server
+tags:
+  - name: Auth
+    description: Authentication Methods
+  - name: Users
+    description: User Model related Methods
+  - name: Locations
+    description: Location Model related Methods
+  - name: WorkStations
+    description: WorkStation Model related Methods
+  - name: Roles
+    description: Role Model related Methods
+  - name: Customers
+    description: Customer Model related Methods
+  - name: Transactions
+    description: Transaction Model related Methods
+  - name: RemitOne
+    description: API calls to fetch data from RemitOne API
+
+################################################################################
+#                                 PATHS                                        #
+################################################################################
+paths:
+  # LOGIN
+  /auth/login:
+    post:
+      tags: [ Auth ]
+      summary: Creates token to be used with subsequent requests. Holds the information of a registered user on the system.
+      requestBody:
+        $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/LoginUserResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  # USERS
+  /users:
+    get:
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: query
+          name: searchText
+          schema:
+            type: string
+            example: mark
+            description: search through user's collection matching against first_name, last_name & email
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [ 'admin', 'location_manager', 'teller']
+        - $ref: '#/components/parameters/statusParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/sortOrderParam'
+        - $ref: '#/components/parameters/sortByParam'
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [ 'role', 'createdAt', 'first_name', 'last_name']
+      responses:
+        200:
+          description: Success
+          $ref: '#/components/schemas/GetUsersResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [ Users ]
+      summary: Creates a user
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/CreateUserResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      summary: Fetch user details by user_id
+      responses:
+        200:
+          $ref: '#/components/schemas/UserByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      summary: Update a user.
+      requestBody:
+        $ref: '#/components/schemas/DefaultRequestBody'
+      responses:
+        200:
+          $ref: '#/components/schemas/UserByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [ Users ]
+      security:
+        - BearerAuth: [ ]
+      summary: Removes a user.
+      responses:
+        200:
+          $ref: '#/components/schemas/DeleteResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  # LOCATIONS
+  /locations:
+    get:
+      tags: [ Locations ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/sortOrderParam'
+        - $ref: '#/components/parameters/statusParam'
+        - in: query
+          name: address
+          schema:
+            type: string
+            example: 'Ruthven Road'
+            description: String to search location's name or address
+      responses:
+        200:
+          description: Success
+          $ref: '#/components/schemas/GetLocationsResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [ Locations ]
+      security:
+        - BearerAuth: [ ]
+      summary: Creates a Location.
+      requestBody:
+        $ref: '#/components/schemas/CreateLocationRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/LocationByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /locations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      tags: [ Locations ]
+      security:
+        - BearerAuth: [ ]
+      summary: Fetch location details by location_id
+      responses:
+        200:
+          $ref: '#/components/schemas/LocationByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [ Locations ]
+      security:
+        - BearerAuth: [ ]
+      summary: Update a location.
+      requestBody:
+        $ref: '#/components/schemas/DefaultRequestBody'
+      responses:
+        200:
+          $ref: '#/components/schemas/LocationByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [ Locations ]
+      security:
+        - BearerAuth: [ ]
+      summary: Removes a location.
+      responses:
+        200:
+          $ref: '#/components/schemas/DeleteResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  # ROLES
+  /roles:
+    get:
+      tags: [ Roles ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageParam'
+        - in: query
+          name: name
+          schema:
+            type: string
+            enum: ['teller', 'admin', 'location_manager']
+            description: String to search for a role by name
+      responses:
+        200:
+          description: Success
+          $ref: '#/components/schemas/GetRolesResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [ Roles ]
+      security:
+        - BearerAuth: [ ]
+      summary: Creates a Role.
+      requestBody:
+        $ref: '#/components/schemas/CreateRoleRequest'
+        content:
+          application/json:
+            schema:
+      responses:
+        200:
+          $ref: '#/components/schemas/RoleByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /roles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/idParam'
+    get:
+      tags: [ Roles ]
+      security:
+        - BearerAuth: [ ]
+      summary: Fetch role details by role_id
+      responses:
+        200:
+          $ref: '#/components/schemas/RoleByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [ Roles ]
+      security:
+        - BearerAuth: [ ]
+      summary: Update a role.
+      requestBody:
+        $ref: '#/components/schemas/DefaultRequestBody'
+      responses:
+        200:
+          $ref: '#/components/schemas/RoleByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [ Roles ]
+      security:
+        - BearerAuth: [ ]
+      summary: Removes a role.
+      responses:
+        200:
+          $ref: '#/components/schemas/DeleteResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  # REMITONE
+  /remitOne/transactions:
+    get:
+      tags: [ RemitOne ]
+      summary: Fetch transactions from a specified date range from RemitOne.
+      parameters:
+        - $ref: '#/components/parameters/toDateParam'
+        - $ref: '#/components/parameters/fromDateParam'
+      responses:
+        200:
+          description: Success
+          $ref: '#/components/schemas/RemitOneTransactionsReponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /remitOne/transactionDetails/{trans_ref}:
+    get:
+      tags: [ RemitOne ]
+      summary: Fetch details of a transaction from RemitOne
+      parameters:
+      - $ref: '#/components/parameters/transactionRefParam'
+      responses:
+        200:
+          $ref: '#/components/schemas/RemitOneTransactionDetailsResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /remitOne/beneficiary:
+    get:
+      tags: [ RemitOne ]
+      summary: Fetch details of a beneficiary from RemitOne.
+      parameters:
+      - $ref: '#/components/parameters/beneficiaryNameParam'
+      - $ref: '#/components/parameters/beneficiaryIdParam'
+      responses:
+        200:
+          $ref: '#/components/schemas/RemitOneBeneficiaryResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /remitOne/agents:
+    get:
+      tags: [ RemitOne ]
+      summary: Fetch list of agents from RemitOne system.
+      responses:
+        200:
+          $ref: '#/components/schemas/GetAgentsResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /remitOne/deliveryBanks:
+    get:
+      tags: [ RemitOne ]
+      summary: Fetch list of Jamaican delivery banks from RemitOne system.
+      responses:
+        200:
+          $ref: '#/components/schemas/GetDeliveryBanksResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  # TRANSACTIONS
+  /transactions:
+    get:
+      tags: [ Transactions ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/sortOrderParam'
+        - $ref: '#/components/parameters/sortByParam'
+        - $ref: '#/components/parameters/filterParam'
+        - in: query
+          name: search
+          schema:
+            type: string
+            description: Search by transaction reference number.
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: ['active', 'review', 'processed', 'cancelled']
+      responses:
+        200:
+          description: Success
+          $ref: '#/components/schemas/GetTransactionsResponseSchema'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [ Transactions ]
+      security:
+        - BearerAuth: [ ]
+      summary: Creates a Transaction.
+      requestBody:
+        $ref: '#/components/schemas/CreateTransactionRequest'
+        content:
+          application/json:
+            schema:
+      responses:
+        200:
+          $ref: '#/components/schemas/TransactionByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+  /transactions/{transaction_ref}:
+    parameters:
+      - in: path
+        name: transaction_ref
+        description: Transaction reference number
+        schema:
+          type: string
+          example: '34343434334'
+    get:
+      tags: [ Transactions ]
+      security:
+        - BearerAuth: [ ]
+      summary: Fetch transaction details by reference number
+      responses:
+        200:
+          $ref: '#/components/schemas/TransactionByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [ Transactions ]
+      security:
+        - BearerAuth: [ ]
+      summary: Update a transaction and emails transaction document if transaction is updated to be processed.
+      responses:
+        200:
+          $ref: '#/components/schemas/TransactionByIdResponse'
+        401:
+          $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        422:
+          $ref: '#/components/schemas/UnprocessableEntityErrorResponse'
+        503:
+          $ref: '#/components/schemas/ServiceUnavailableErrorResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+################################################################################
+#                                COMPONENTS                                    #
+################################################################################
+components:
+  # Parameters
+  parameters:
+    idParam:
+      name: id
+      in: path
+      schema:
+        type: objectId
+        example: 5f5eb030c897750624e4b22e
+    filterParam:
+      name: filter
+      in: query
+      schema:
+        type: object
+      style: deepObject
+      description: Filter on attribute names with exact values
+    sortByParam:
+      name: sortBy
+      in: query
+      schema:
+        type: string
+        description: Field to sort transactions list by.
+        example: 'created'
+    limitParam:
+      name: limit
+      in: query
+      description: Pass '-1' to retrieve ALL items
+      schema:
+        type: integer
+        example: 10
+    sortOrderParam:
+      in: query
+      name: sortOrder
+      schema:
+        type: string
+        enum: ['asc', 'desc']
+    pageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+    statusParam:
+      in: query
+      name: status
+      schema:
+        type: string
+        enum: [ 'active', 'inactive', 'removed', 'archived']
+    transactionRefParam:
+      in: path
+      name: trans_ref
+      schema:
+        type: string
+        example: "RA070633799238"
+    toDateParam:
+      in: query
+      name: to_date
+      schema:
+        type: string
+        format: date
+        example: "2021-04-12"
+      required: true
+    fromDateParam:
+      in: query
+      name: from_date
+      schema:
+        type: string
+        format: date
+        example: "2021-04-12"
+      required: true
+    beneficiaryNameParam:
+      in: query
+      name: name
+      schema: 
+        type: string
+        example: "John Smith"
+      required: true
+    beneficiaryIdParam:
+      name: beneficiary_id
+      schema: 
+        type: number
+        example: 208653
+      required: true
+  # Requests & Responses
+  schemas:
+    # LOGIN/AUTH
+    LoginUserRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                example: akeim.sutherland@smsja.net
+              password:
+                type: string
+                example: password123
+    LoginUserResponse:
+      description: Success
+      content:
+        application/json:
+          schema:       
+            type: object
+            properties:
+              token:
+                type: string
+    # ROLES
+    RoleSchema:
+      type: object
+      properties:
+        _id:
+          type: objectId
+          example: 5f5eb030c897750624e4b22e
+        name:
+          type: string
+          example: teller
+        permission:
+          type: object
+          properties:
+            teller:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+            location:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+            transactions:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+            report:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create']
+            role:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+            user:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+            customer:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+            workstation:
+              type: array
+              description: Role actions permitted
+              items:
+                type: string
+                enum: ['create', 'read', 'update', 'delete']
+    CreateRoleRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                example: 'admin'
+    GetRolesResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleSchema'
+              pageInfo:
+                $ref: '#/components/schemas/PaginationSchema'
+    RoleByIdResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RoleSchema'
+    # REMITONE TRANSACTION
+    RemitOneBeneficiarySchema:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 208829
+        name:
+          type: string
+          example: ROBERT HERON
+        tel:
+          type: string
+          example: "18765243009"
+        mobile:
+          type: string
+          example: "18765634519"
+        id_type:
+          type: string
+          example: Driver's License
+        id_number:
+          type: string
+          example: "108867030"
+        account_number:
+          type: number
+          example: 416958
+        bank:
+          type: string
+          example: JMMB Money Transfer Back Office
+        bank_branch:
+          type: string
+          example: JMMB Money Transfer Back Office 0733
+        bank_branch_city:
+          type: string
+          example: Kingston 5
+        suspicious:
+          type: string
+          enum: ["t", "f"]
+        suspicion_reason:
+          type: string
+          example: "Large amount sent regulary to various locations."
+        linked_remitter_ids:
+          type: array
+          items:
+            type: number
+            example: 497203
+        address:
+          type: object
+          properties:
+            address1:
+              type: string
+              example: 22 HESOYAM AVE
+            address2:
+              type: string
+              example: Kingston 2
+            city:
+              type: string
+              example: Kingston
+    RemitOneBeneficiaryResponseSchema:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RemitOneBeneficiarySchema'
+    RemitOneTransactionSchema:
+      type: object
+      properties:
+        transaction_ref:
+          type: string
+          example: RA070633799238
+        delivery_date:
+          type: string
+          format: date
+          example: "2021-04-12"
+        processed_date:
+          type: string
+          format: date
+          example: "2021-04-13"
+        email_to:
+          type: string
+          example: "robert.heron@mail.com"
+        status:
+          type: string
+          enum: ["SENT_FOR_DELIVERY", "PROCESSED", "HQ_OK", "CANCELLED"]
+        sender:
+          type: object
+          properties:
+            id:
+              type: number
+              example: 497255
+            name:
+              type: string
+              example: MR. NAKASH HALL
+            tel:
+              type: string
+              example: "18768205446"
+            address:
+              type: object
+              properties:
+                address1:
+                  type: string
+                  example: 223 HILLER VEIW TERRACE
+                city:
+                  type: string
+                  example: Chicago
+                state:
+                  type: string
+                  example: IL
+                country:
+                  type: string
+                  example: US
+            id_type:
+              type: string
+              example: Driver's License
+            id_number:
+              type: string
+              example: XSSKD1192
+            occupation:
+              type: string
+              example: Teacher
+            gender:
+              type: string
+              enum: ["MALE", "FEMALE"]
+        beneficiary:
+          type: object
+          properties:
+            id:
+              type: number
+              example: 208829
+            name:
+              type: string
+              example: ROBERT HERON
+            tel:
+              type: string
+              example: "18765243009"
+            mobile:
+              type: string
+              example: "18765634519"
+            id_type:
+              type: string
+              example: Driver's License
+            id_number:
+              type: string
+              example: "108867030"
+            address:
+              type: object
+              properties:
+                address1:
+                  type: string
+                  example: 22 HESOYAM AVE
+                address2:
+                  type: string
+                  example: Kingston 2
+                city:
+                  type: string
+                  example: Kingston
+        remittanceInfo:
+          type: object
+          properties:
+            agent:
+              type: string
+              example: World Remit Corporation Limited
+            agent_code:
+              type: number
+              example: 0706
+            purpose:
+              type: string
+              example: Family Support
+            source_of_income:
+              type: string
+              example: Salary
+            send_country:
+              type: string
+              example: US
+            send_currency:
+              type: string
+              example: USD
+            send_amount:
+              type: number
+              example: 2000.00
+            rate:
+              type: number
+              example: 147.00
+            commission:
+              type: number
+              example: 165.00
+            paid:
+              type: number
+              example: 2165.00
+            receive_country:
+              type: string
+              example: JM
+            receive_currency:
+              type: string
+              example: JMD
+            receive_amount:
+              type: number
+              example: 294000
+    RemitOneTransactionDetailsResponseSchema:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RemitOneTransactionSchema'
+    RemitOneTransactionsReponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              responseId:
+                type: number
+                example: 204103687
+              status:
+                type: string
+                example: "SUCCESS"
+              result:
+                type: object
+                properties:
+                  count:
+                    type: number
+                    example: 58
+                  transactions:
+                    type: object
+                    properties:
+                      transaction:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RemitOneTransactionSchema'
+    # DELIVERY BANKS
+    DeliveryBankSchema:
+      type: object
+      properties:
+        bank_id:
+          type: number
+          example: 18
+        name:
+          type: string
+          example: "Access Cambio"
+        country_id:
+          type: number
+          example: 999
+        bank_code:
+          type: string
+          example: "ACCESS"
+        swift_code:
+          type: number
+          example: 4848032
+        address:
+          type: string
+          example: "28 Main Street"
+        city:
+          type: string
+          example: "May Pen"
+        state:
+          type: string
+          example: "N/A"
+        telephone:
+          type: string
+          example: "18765550909"
+    GetDeliveryBanksResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              count:
+                type: number
+                example: 198
+              responseId:
+                type: number
+                example: 204103687
+              status:
+                type: string
+                example: "SUCCESS"
+              result:
+                type: object
+                properties:
+                  delivery_banks:
+                    type: object
+                    properties:
+                      delivery_bank:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DeliveryBankSchema'
+    # AGENTS
+    AgentSchema:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "UNO Money Transfer Limited"
+        username:
+          type: string
+          example: "unoomnx_agt"
+        code:
+          type: number
+          example: 0707
+    GetAgentsResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              count:
+                type: number
+                example: 158
+              responseId:
+                type: number
+                example: 204102677
+              status:
+                type: string
+                example: "SUCCESS"
+              result:
+                type: object
+                properties:
+                  agents:
+                    type: object
+                    properties:
+                      agent:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AgentSchema'
+    # USERS
+    UserSchema:
+      type: object
+      properties:
+        _id:
+          type: objectId
+          example: 5f9d92e6dfb32848544215c1
+        role:
+          $ref: '#/components/schemas/RoleSchema'
+        phone:
+          type: string
+          example: '8912312831'
+        first_name:
+          type: string
+          example: 'John'
+        last_name:
+          type: string
+          example: 'Smith'
+        email:
+          type: string
+          example: 'john.smith@gmail.com'
+        createdAt:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+        updatedAt:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+        status:
+          type: string
+          enum: ['active', 'inactive', 'archived', 'removed']
+        assigned_workstation:
+          $ref: '#/components/schemas/WorkStationSchema'
+        location:
+           $ref: '#/components/schemas/LocationSchema'
+        address:
+          type: string
+          example: '12 Ruthven Road'
+        license_exp_date:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+    GetUsersResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSchema'
+              pageInfo:
+                $ref: '#/components/schemas/PaginationSchema'
+    CreateUserRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              first_name:
+                type: string
+                example: 'John'
+              last_name:
+                type: string
+                example: 'Smith'
+              email:
+                type: string
+                example: 'john.smith@gmail.com'
+              phone:
+                type: string
+                example: '8912312831'
+              password:
+                type: string
+                example: password123
+              confirm_password:
+                type: string
+                example: password123
+              role:
+                type: string
+                enum: [ 'admin', 'location_manager', 'teller']
+              address:
+                type: string
+                example: '12 Ruthven Road'
+              license_exp_date:
+                type: string
+                format: datetime
+                example: "2020-10-31T16:37:58.268Z"
+              location:
+                type: objectId
+                example: 5f9d92e6dfb32848544215c1          
+                description: ObjectId of the location user is to be placed, if not admin.
+    CreateUserResponse:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              user_id:
+                type: ObjectId
+                example: 5faadc2bfdd49b3ffd570d92
+              first_name:
+                type: string
+                example: Marlon
+              last_name:
+                type: string
+                example: Thompson
+              email:
+                type: string
+                example: marlon.thompson@gmail.com
+    UserByIdResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserSchema'
+    # TRANSACTIONS
+    TransactionSchema:
+      properties:
+        _id:
+          type: objectId
+          example: 5f9d92e6dfb32848544215c1        
+        transaction_id:
+          type: string
+          example: '654545455334'
+        transaction_ref:
+          type: string
+          example: '34343434334'
+        status:
+          type: string
+          example: 'active'
+        sender:
+          type: object
+          properties:
+            first_name:
+              type: string
+              example: 'James'
+            last_name:
+              type: string
+              example: 'Smith'
+            id_type:
+              type: string
+              example: 'National ID'
+            id_number:
+              type: string
+              example: '8993492893'
+            address:
+              type: object
+              properties:
+                line_1:
+                  type: string
+                  example: 12 Ruthven Road
+                line_2:
+                  type: string
+                  example: 'Kingston 5'
+                parish:
+                  type: string
+                  example: 'Kingston'
+                state:
+                  type: string
+                  example: 'Kingston'
+                country:
+                  type: string
+                  example: 'Jamaica'
+                zip:
+                  type: string
+                  example: KGN05
+            phone:
+              type: string
+              example: '8762389231'
+        beneficiary:
+          type: object
+          properties:
+            first_name:
+              type: string
+              example: 'Michael'
+            last_name:
+              type: string
+              example: 'Jones'
+            address:
+              type: object
+              properties:
+                line_1:
+                  type: string
+                  example: 12 Varmoover Road
+                line_2:
+                  type: string
+                  example: 'Kingston 10'
+                parish:
+                  type: string
+                  example: 'Kingston'
+                state:
+                  type: string
+                  example: 'Kingston'
+                country:
+                  type: string
+                  example: 'Jamaica'
+                zip:
+                  type: string
+                  example: KGN10
+            phone:
+              type: string
+              example: '87690233942'
+            payment:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  example: 'jmd'
+                amount_sent:
+                  type: number
+                  example: 654443
+                charges:
+                  type: number
+                  example: 650
+                promotions_applied:
+                  type: number
+                  example: 10
+                tax:
+                  type: number
+                  example: 16
+                total:
+                  type: number
+                  example: 553344
+            delivery_type:
+              type: string
+              example: 'email'
+            receiving_location:
+              type: string
+              example: '34 Boothview Road'
+            transaction_location:
+              type: string
+              example: '76 Grayden Street'
+            document_id:
+              type: string
+              example: '9389348934'
+            email_to:
+              type: string
+              example: 'akeim.sutherland@smsja.net'
+        createdAt:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+        updatedAt:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+    GetTransactionsResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionSchema'
+              pageInfo:
+                $ref: '#/components/schemas/PaginationSchema'
+    CreateTransactionRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#components/schemas/TransactionSchema'
+    TransactionByIdResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransactionSchema'
+    # LOCATIONS
+    LocationSchema:
+      type: object
+      properties:
+        _id:
+          type: objectId
+          example: 5f9d92e6dfb32848544215c1
+        address:
+          type: string
+          example: '12 Ruthven Road, Kingston 4'
+        name:
+          type: string
+          example: Ruthven
+        contact_1:
+          type: string
+          example: '87690233942'
+        contact_2:
+          type: string
+          example: '87690233942'
+        location_type:
+          type: string
+          example: 'Money Transfer'
+        agent_type:
+          type: string
+          example: 'JMMB Money Transfer'
+        manager:
+          type: objectId
+          example: 5f9d92e6dfb32848544215c1
+        status:
+          type: string
+          enum: ['active', 'inactive', 'archived', 'removed']
+        createdAt:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+        updatedAt:
+          type: string
+          format: datetime
+          example: "2020-10-31T16:37:58.268Z"
+    GetLocationsResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationSchema'
+              pageInfo:
+                $ref: '#/components/schemas/PaginationSchema'
+    CreateLocationRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              address:
+                type: string
+                example: '12 Ruthven Road, Kingston 4'
+              name:
+                type: string
+                example: Ruthven
+              contact_1:
+                type: string
+                example: '87690233942'
+              contact_2:
+                type: string
+                example: '87690233942'
+              location_type:
+                type: string
+                example: 'Money Transfer'
+              agent_type:
+                type: string
+                example: 'JMMB Money Transfer'
+              manager: 
+                type: objectId
+                example: 5f9d92e6dfb32848544215c1
+                required: false
+    LocationByIdResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocationSchema'
+    # ERRORS
+    ErrorResponse:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntityErrorResponse:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailableErrorResponse:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnauthorizedErrorResponse:
+      description: Unauthorized User
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    # REUSABLES
+    DefaultRequestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+    DeleteResponseSchema:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: 'User successfully deleted'
+    PaginationSchema:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 2
+        totalRecords:
+          type: integer
+          example: 14
+    securitySchemas:
+      BearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
