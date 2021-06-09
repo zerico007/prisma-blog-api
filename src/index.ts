@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import http from "http";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
@@ -22,3 +22,11 @@ app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 
 app.use("/post", postRoutes);
+
+/** Error Handling*/
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const error = new Error("Not found");
+  return res.status(404).json({
+    message: error.message,
+  });
+});

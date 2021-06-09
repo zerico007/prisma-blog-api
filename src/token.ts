@@ -24,7 +24,7 @@ const validateLogin = (authorization: string) =>
 
     const headerParts = authorization.split(" ");
     if (headerParts.length < 2) {
-      return reject(new Error("Invalide Authorization Header"));
+      return reject(new Error("Invalid Authorization Header"));
     }
     const token = headerParts[1].toString();
     try {

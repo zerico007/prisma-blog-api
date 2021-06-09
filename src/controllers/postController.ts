@@ -96,7 +96,7 @@ export const getOnePost = async (req, res) => {
   try {
     const post = await prisma.post.findUnique({
       where: {
-        id: parseInt(id),
+        id: +id,
       },
       include: authorColumns,
     });
@@ -114,7 +114,7 @@ export const publishPost = async (req, res) => {
   const { id } = req.params;
   try {
     const post = await prisma.post.update({
-      where: { id: parseInt(id) },
+      where: { id: +id },
       data: { published: true },
     });
     res.json(post);
@@ -129,7 +129,7 @@ export const updatePost = async (req, res) => {
   console.log(req.body);
   try {
     const post = await prisma.post.update({
-      where: { id: parseInt(id) },
+      where: { id: +id },
       data: params,
     });
     res.json(post);
@@ -142,7 +142,7 @@ export const deletePost = async (req, res) => {
   const { id } = req.params;
   try {
     const post = await prisma.post.delete({
-      where: { id: parseInt(id) },
+      where: { id: +id },
     });
     res.json(post);
   } catch (error) {

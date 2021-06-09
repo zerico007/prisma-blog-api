@@ -7,9 +7,7 @@ export const handleError = (message: string, res: Response) => {
 
 export const handleNotFound = (message: string, res: Response) => {
   if (message.includes("not found")) {
-    res
-      .status(httpStatus.UNPROCESSABLE_ENTITY)
-      .json({ message: "Record not found." });
+    res.status(httpStatus.NOT_FOUND).json({ message: "Record not found." });
   } else {
     handleError(message, res);
   }
